@@ -203,6 +203,19 @@ MLN_EXPORT IB_DESIGNABLE @interface MLNMapView : NSView<MLNStylable>
  */
 @property (nonatomic, assign) BOOL prefetchesTiles;
 
+/**
+ A Boolean value indicating whether the renderer keeps tiles that have left the
+ viewport in an in-memory cache, to show them again without reloading. The
+ default value is `YES`. Mirrors the property of the same name on iOS.
+ */
+@property (nonatomic, assign) BOOL tileCacheEnabled;
+
+/**
+ Releases what the renderer can rebuild: the in-memory tile cache and other
+ caches. Mirrors what the iOS map view does on a memory warning.
+ */
+- (void)reduceMemoryUse;
+
 // MARK: Tile LOD controls
 
 /**

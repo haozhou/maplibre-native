@@ -4,6 +4,7 @@ MapLibre welcomes participation and contributions from everyone. Please read [`C
 
 ## main
 
+- Added `MLNMapView.tileCacheEnabled` and `-[MLNMapView reduceMemoryUse]`, to switch off or empty the renderer's in-memory tile cache.
 - 💥 Breaking: Replace the `Mapbox.h` umbrella header with `MapLibre.h`. `MapLibre.xcframework` no longer ships `Mapbox.h` ([#4731](https://github.com/maplibre/maplibre-native/pull/4731)).
 
   <details>

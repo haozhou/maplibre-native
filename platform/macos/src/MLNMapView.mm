@@ -753,6 +753,20 @@ public:
   return _mbglMap->getPrefetchZoomDelta() > 0 ? YES : NO;
 }
 
+- (void)setTileCacheEnabled:(BOOL)enabled {
+  _rendererFrontend->setTileCacheEnabled(enabled);
+}
+
+- (BOOL)tileCacheEnabled {
+  return _rendererFrontend->getTileCacheEnabled();
+}
+
+- (void)reduceMemoryUse {
+  if (_rendererFrontend) {
+    _rendererFrontend->reduceMemoryUse();
+  }
+}
+
 - (void)setTileLodMinRadius:(double)tileLodMinRadius {
   _mbglMap->setTileLodMinRadius(tileLodMinRadius);
 }
