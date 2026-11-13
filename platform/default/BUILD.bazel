@@ -142,10 +142,6 @@ cc_library(
         "//platform/macos:macos_cfrunloop_loop": [
             "-lsqlite3",
             "-lz",
-            "-lcurl",
-            "-lpng",
-            "-ljpeg",
-            "-lwebp",
             "-licucore",
         ],
         "//conditions:default": [],

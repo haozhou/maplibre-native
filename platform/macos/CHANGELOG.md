@@ -4,6 +4,7 @@ MapLibre welcomes participation and contributions from everyone. Please read [`C
 
 ## main
 
+- Bazel: the macOS build no longer links `libcurl`, `libpng`, `libjpeg` and `libwebp`, which it does not use. On Apple silicon these resolved to Homebrew libraries by absolute path.
 - 💥 Breaking: Replace the `Mapbox.h` umbrella header with `MapLibre.h`. `MapLibre.xcframework` no longer ships `Mapbox.h` ([#4731](https://github.com/maplibre/maplibre-native/pull/4731)).
 
   <details>
