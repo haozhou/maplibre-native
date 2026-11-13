@@ -622,7 +622,28 @@ MLNImage *MLNAttributedSnapshot(mln::MapSnapshotter::Attributions attributions, 
                                                                 hints:nil];
   compositedImage = [[NSImage alloc] initWithSize:targetFrame.size];
 
-  [compositedImage lockFocus];
+  // Composite into a bitmap with the requested pixel density. -lockFocus would rasterize at
+  // the main screen's backing scale and silently cap the output at 1x or 2x, whatever
+  // MLNMapSnapshotOptions.scale asked for.
+  CGFloat targetScale = MAX(options.scale, 1);
+  NSBitmapImageRep *targetRep = [[NSBitmapImageRep alloc]
+      initWithBitmapDataPlanes:NULL
+                    pixelsWide:(NSInteger)lround(targetFrame.size.width * targetScale)
+                    pixelsHigh:(NSInteger)lround(targetFrame.size.height * targetScale)
+                 bitsPerSample:8
+               samplesPerPixel:4
+                      hasAlpha:YES
+                      isPlanar:NO
+                colorSpaceName:NSDeviceRGBColorSpace
+                   bytesPerRow:0
+                  bitsPerPixel:0];
+  targetRep.size = targetFrame.size;
+  NSGraphicsContext *bitmapContext = [NSGraphicsContext graphicsContextWithBitmapImageRep:targetRep];
+  if (!bitmapContext) {
+    return nil;
+  }
+  [NSGraphicsContext saveGraphicsState];
+  [NSGraphicsContext setCurrentContext:bitmapContext];
 
   [sourceImageRep drawInRect:targetFrame];
 
@@ -632,6 +653,7 @@ MLNImage *MLNAttributedSnapshot(mln::MapSnapshotter::Attributions attributions, 
   if (!currentContext) {
     // If the current context has been corrupted by the user,
     // return nil so we can generate an error later.
+    [NSGraphicsContext restoreGraphicsState];
     return nil;
   }
 
@@ -640,11 +662,18 @@ MLNImage *MLNAttributedSnapshot(mln::MapSnapshotter::Attributions attributions, 
   }
 
   if (options.showsAttribution) {
-    NSBitmapImageRep *attributionBackground =
-        [[NSBitmapImageRep alloc] initWithFocusedViewRect:attributionBackgroundFrame];
+    // Crop what has been drawn so far (bitmap rows run top-down, frames bottom-up).
+    [bitmapContext flushGraphics];
+    CGRect cropRect = CGRectMake(
+        attributionBackgroundFrame.origin.x * targetScale,
+        (targetFrame.size.height - CGRectGetMaxY(attributionBackgroundFrame)) * targetScale,
+        attributionBackgroundFrame.size.width * targetScale,
+        attributionBackgroundFrame.size.height * targetScale);
+    CGImageRef attributionBackgroundRef = CGImageCreateWithImageInRect([targetRep CGImage], cropRect);
 
     CIImage *attributionBackgroundImage =
-        [[CIImage alloc] initWithCGImage:[attributionBackground CGImage]];
+        [[CIImage alloc] initWithCGImage:attributionBackgroundRef];
+    CGImageRelease(attributionBackgroundRef);
 
     NSImage *blurredAttributionBackground =
         [MLNMapSnapshotter blurredAttributionBackground:attributionBackgroundImage];
@@ -656,7 +685,9 @@ MLNImage *MLNAttributedSnapshot(mln::MapSnapshotter::Attributions attributions, 
                                     attributionInfo:attributionInfo];
   }
 
-  [compositedImage unlockFocus];
+  [bitmapContext flushGraphics];
+  [NSGraphicsContext restoreGraphicsState];
+  [compositedImage addRepresentation:targetRep];
 
   return compositedImage;
 #endif
