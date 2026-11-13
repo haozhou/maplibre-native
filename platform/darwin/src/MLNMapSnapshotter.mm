@@ -671,14 +671,18 @@ MLNImage *MLNAttributedSnapshot(mln::MapSnapshotter::Attributions attributions, 
         attributionBackgroundFrame.size.height * targetScale);
     CGImageRef attributionBackgroundRef = CGImageCreateWithImageInRect([targetRep CGImage], cropRect);
 
-    CIImage *attributionBackgroundImage =
-        [[CIImage alloc] initWithCGImage:attributionBackgroundRef];
-    CGImageRelease(attributionBackgroundRef);
+    // Nil when the frame is empty (a style without attribution) or outside the image:
+    // then there is no background to blur.
+    if (attributionBackgroundRef) {
+      CIImage *attributionBackgroundImage =
+          [[CIImage alloc] initWithCGImage:attributionBackgroundRef];
+      CGImageRelease(attributionBackgroundRef);
 
-    NSImage *blurredAttributionBackground =
-        [MLNMapSnapshotter blurredAttributionBackground:attributionBackgroundImage];
+      NSImage *blurredAttributionBackground =
+          [MLNMapSnapshotter blurredAttributionBackground:attributionBackgroundImage];
 
-    [blurredAttributionBackground drawInRect:attributionBackgroundFrame];
+      [blurredAttributionBackground drawInRect:attributionBackgroundFrame];
+    }
 
     [MLNMapSnapshotter drawAttributionTextWithStyle:attributionInfoStyle
                                              origin:attributionTextPosition
